@@ -35,7 +35,14 @@ pipeline {
              }
          }
 
-         stage('SonarScan') {
+         stage('Deploy to Heroku') {
+      steps {
+       withCredentials([usernameColonPassword(credentialsId: 'Ndiki', variable: 'HEROKU_CREDENTIALS' )]){
+       sh 'git push https://${HEROKU_CREDENTIALS}@git.heroku.com/evening-waters-20215.git master'
+     }
+   }
+ } 
+ stage('SonarScan') {
             environment {
                 SCANNER_HOME = tool 'SonarQubeScanner'
                 SONAR_TOKEN = credentials('sonar')
@@ -49,14 +56,6 @@ pipeline {
                 }
             }
         }
-         stage('Deploy to Heroku') {
-      steps {
-       withCredentials([usernameColonPassword(credentialsId: 'Ndiki', variable: 'HEROKU_CREDENTIALS' )]){
-       sh 'git push https://${HEROKU_CREDENTIALS}@git.heroku.com/evening-waters-20215.git master'
-     }
-   }
- } 
-
  node {
     try {
         stage 'Checkout'
@@ -77,5 +76,4 @@ pipeline {
         slackSend color: "danger", message: "Build failed :disappointed_relieved: \n`${env.JOB_NAME}#${env.BUILD_NUMBER}` <${env.BUILD_URL}|Fire up Jenkins>"
         throw err
     }
-}
 }
